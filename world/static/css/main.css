@@ -1,0 +1,24 @@
+#map {
+    width: 100vw;
+    height: 100vh;
+}
+
+#btn-filter {
+    position: absolute; 
+    z-index: 1000 !important;
+    right: 0;
+    left: 0;
+
+}
+
+.blocks .btn {
+    padding: 24px 12px;
+    margin: 0 5px;
+    border-radius: 0;
+}
+
+.btn .btn-chedraui {
+    color: #000;
+    background-color: #fa5127;
+    border-color: #fa5127;
+}

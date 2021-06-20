@@ -1,0 +1,440 @@
+<!doctype html>
+{% load static %}
+<html lang="es">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+
+    <link rel="stylesheet" href="{% static 'css/leaflet.css' %}">
+    <link rel="stylesheet" href="{% static 'css/easy-button.css' %}">
+    <link rel="stylesheet" href="{% static 'css/leaflet-control-credits.css'%}" />
+    <link rel="stylesheet" href="{% static 'css/L.Control.Locate.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/leaflet-control-credits.css' %}">
+    <link rel="stylesheet" href="{% static 'css/webmap-brt.css' %}">
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    <link rel="stylesheet" href="{% static 'css/fontawesome-all.min.css' %}">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-gtEjrD/SeCtmISkJkNUaaKMoLD0//ElJ19smozuHV6z3Iehds+3Ulb9Bn9Plx0x4" crossorigin="anonymous">
+    </script>
+    <title>
+        {% block title %}
+        {{title}}
+        {% endblock %}</title>
+</head>
+
+<body>
+    <div id="map">
+        <div id="btn-filter" class="btn-group btn-group-sm blocks btn-toolbar" role="toolbar">
+            <button type="button" id="ched" class="btn btn-dark"> <img src="" alt="">  Chedraui</button>
+            <button type="button" id="ched_select" class="btn btn-dark">Chedraui Selecto</button>
+            <button type="button" id="supercito" class="btn btn-dark">Supercito</button>
+            <button type="button" id="super_che" class="btn btn-dark">Super Che</button>
+            <button type="button" id="super_ched" class="btn btn-dark">Super Chedraui</button>
+            <button type="button" id="super_ched_select" class="btn btn-dark">Super Chedraui Selecto</button>
+            <button type="button" id="total" class="btn btn-warning">Total Tiendas</button>
+            <button type="button" id="clean" class="btn btn-danger">Limpiar Seleccion</button>
+        </div>
+    </div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="{% static 'js/webmap-brt-expressions.js' %}"></script>
+    <script src="{% static 'js/leaflet.js' %}"></script>
+    <script src="{% static 'js/Leaflet.Control.Custom.js' %}"></script>
+
+    <script src="{% static 'js/L.Control.Locate.min.js' %}"></script>
+    <script src="{% static 'js/leaflet-control-credits.js' %}"></script>
+    <script src="{% static 'js/leaflet-hash.js' %}"></script>
+    <script src="{% static 'js/Autolinker.min.js' %}"></script>
+    <script src="{% static 'js/wNumb.js' %}"></script>
+    <script src="{% static 'data/data.js' %}"></script>
+    <script src="{% static 'js/main.js' %}"></script>
+
+    <script>
+
+        ICON_CHED_URL = '{% static "legend/icon-l1.png" %}'
+        
+
+        var map = L.map('map', {
+            zoomControl: true,
+            maxZoom: 28,
+            minZoom: 1
+        }).fitBounds([
+            [18.959155873777696, -98.34765556199129],
+            [19.090022479410795, -98.07164760998482]
+        ]);
+
+        var hash = new L.Hash(map);
+        map.attributionControl.setPrefix(
+            '<a href="https://www.linkedin.com/in/geofrancisco/" title="GeoSIG" "target="_blank">GeoSIG</a>'
+        );
+        var autolinker = new Autolinker({
+            truncate: {
+                length: 30,
+                location: 'smart'
+            }
+        });
+        L.control.locate({
+            locateOptions: {
+                maxZoom: 19
+            }
+        }).addTo(map);
+
+        var bounds_group = new L.featureGroup([]);
+
+        function setBounds() {}
+
+        map.createPane('pane_baseMap');
+        map.getPane('pane_baseMap').style.zIndex = 100;
+
+        // BASEMAPS
+        var stadiaBaseMap = L.tileLayer(
+            'https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png?api_key=d665daaa-c574-4129-a04a-d443865cb97c', {
+                pane: 'pane_baseMap',
+                opacity: 1.0,
+                attribution: 'Basemap ©<a href="https://stadiamaps.com/">Stadia Maps</a> &middot; Data ©<a href=https://www.openstreetmap.org/copyright">OpenStreetMaps</a>',
+                minZoom: 1,
+                maxZoom: 28,
+                minNativeZoom: 0,
+                maxNativeZoom: 20
+            });
+        stadiaBaseMap;
+        var baseMapsatelital = L.tileLayer(
+            'http://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+                pane: 'pane_baseMap',
+                subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+                opacity: 1.0,
+                attribution: 'Basemap ©<a href="https://stadiamaps.com/">Stadia Maps</a> &middot; Data ©<a href=https://www.openstreetmap.org/copyright">OpenStreetMaps</a>',
+                minZoom: 1,
+                maxZoom: 28,
+                minNativeZoom: 0,
+                maxNativeZoom: 20
+            });
+        baseMapsatelital;
+        map.addLayer(stadiaBaseMap);
+
+        // POPUPS
+        function pop_tiendas(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                    <h5 colspan="2">' + (feature.properties['nombre'] !== null ? autolinker.link(feature.properties[
+                'nombre'].toLocaleString()) : '') + '</h5>\
+                    </tr>\
+                    <tr>\
+                        <h6 colspan="2">' + (feature.properties['formato'] !== null ? autolinker.link(feature.properties[
+                'formato'].toLocaleString()) : '') + '</h6>\
+                    </tr>\
+                    <tr>\
+                        <th>\
+                        ID: \
+                        </th>\
+                        <td colspan="2">' + (feature.properties['id_mg'] !== null ? autolinker.link(feature.properties[
+                'id_mg'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th>\
+                        latitud: \
+                        </th>\
+                        <td colspan="2">' + (feature.properties['latitud'] !== null ? autolinker.link(feature
+                .properties[
+                    'latitud'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th>\
+                        longitud: \
+                        </th>\
+                        <td colspan="2">' + (feature.properties['longitud'] !== null ? autolinker.link(feature
+                .properties[
+                    'longitud'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {
+                maxHeight: 400
+            });
+        }
+        // ICONOS
+        var icon_ched = L.icon({
+            iconUrl: "{% static 'images/icons/icon-chedraui.png'%}",
+            iconSize: [25,],
+            popupAnchor: [0, -5],
+        })
+        // ESTILOS
+        function clasified_tiendas(feature) {
+            switch (String(feature.properties['formato'])) {
+                case 'CHEDRAUI':
+                    return icon_ched
+                    break;
+                case 'L2':
+                    return iconL2
+                    break;
+                case 'L3':
+                    return iconL3
+                    break;
+                default:
+                    return {
+                        pane: 'pane_bus_stops_1',
+                            radius: 3.0,
+                            opacity: 1,
+                            color: 'rgba(35,35,35,0.0)',
+                            dashArray: '',
+                            lineCap: 'butt',
+                            lineJoin: 'miter',
+                            weight: 1,
+                            fill: true,
+                            fillOpacity: 1,
+                            fillColor: 'rgba(58,113,201,1.0)',
+                            interactive: true,
+                    }
+                    break;
+            }
+        }
+        var myStyle = {
+            "weight": 5,
+            "opacity": 0.2
+
+        };
+        var geojsonMarkerOptions = {
+            radius: 3,
+            fillColor: "#ff7800",
+            color: "#000",
+            weight: 1,
+            opacity: 1,
+            fillOpacity: 0.7
+        };
+
+        // CREATE LAYERPANE
+        map.createPane('tienda_chedraui');
+        map.getPane('tienda_chedraui').style.zIndex = 0
+        map.createPane('polygon');
+        map.getPane('polygon').style.zIndex = 400
+
+        // LAYERS
+        var pais = '{{ pais|safe }}'
+        paisPolygon = JSON.parse(pais)
+        var polygon = new L.geoJson(paisPolygon, {
+            style: myStyle
+        })
+
+        function filter_ched(feature) {
+            if (feature.properties.formato === "CHEDRAUI") return true
+        }
+
+        function filter_ched_selecto(feature) {
+            if (feature.properties.formato === "CHEDRAUI SELECTO") return true
+        }
+
+        function filter_supercito(feature) {
+            if (feature.properties.formato === "SUPERCITO") return true
+        }
+
+        function filter_super_che(feature) {
+            if (feature.properties.formato === "SÚPER CHE" || feature.properties.formato === "SÚPER CHE CD") return true
+        }
+
+        function filter_super_ched(feature) {
+            if (feature.properties.formato === "SÚPER CHEDRAUI") return true
+        }
+
+        function filter_super_ched_select(feature) {
+            if (feature.properties.formato === "SÚPER CHEDRAUI SELECTO") return true
+        }
+        
+        var tiendas = '{{tiendas | safe}}'
+        tiendasPoint = JSON.parse(tiendas)
+
+        var lyr_tiendas = L.geoJSON(tiendasPoint, {
+            onEachFeature: pop_tiendas,
+            pointToLayer: function (feature, latlng) {
+                return L.circleMarker(latlng, geojsonMarkerOptions);
+            }
+        });
+        var lyr_ched = L.geoJSON(tiendasPoint, {
+            filter: filter_ched,
+            onEachFeature: pop_tiendas,
+            pointToLayer: function (feature, latlng) {
+                return L.marker(latlng, {
+                    icon: clasified_tiendas(feature)});
+            }
+        });
+        var lyr_ched_selecto = L.geoJSON(tiendasPoint, {
+            filter: filter_ched_selecto,
+            onEachFeature: pop_tiendas,
+            pointToLayer: function (feature, latlng) {
+                return L.circleMarker(latlng, geojsonMarkerOptions);
+            }
+        });
+        var lyr_supercito = L.geoJSON(tiendasPoint, {
+            filter: filter_supercito,
+            onEachFeature: pop_tiendas,
+            pointToLayer: function (feature, latlng) {
+                return L.circleMarker(latlng, geojsonMarkerOptions);
+            }
+        });
+        var lyr_super_che = L.geoJSON(tiendasPoint, {
+            filter: filter_super_che,
+            onEachFeature: pop_tiendas,
+            pointToLayer: function (feature, latlng) {
+                return L.circleMarker(latlng, geojsonMarkerOptions);
+            }
+        });
+        var lyr_super_ched = L.geoJSON(tiendasPoint, {
+            filter: filter_super_ched,
+            onEachFeature: pop_tiendas,
+            pointToLayer: function (feature, latlng) {
+                return L.circleMarker(latlng, geojsonMarkerOptions);
+            }
+        });
+        var lyr_super_ched_selecto = L.geoJSON(tiendasPoint, {
+            filter: filter_super_ched_select,
+            onEachFeature: pop_tiendas,
+            pointToLayer: function (feature, latlng) {
+                return L.circleMarker(latlng, geojsonMarkerOptions);
+            }
+        });
+
+        var layers = L.layerGroup([
+            lyr_ched,
+            lyr_ched_selecto,
+            lyr_supercito,
+            lyr_super_che,
+            lyr_super_ched,
+            lyr_super_ched_selecto
+        ])
+
+        
+        //      JQUERY
+
+        $("#ched").click(function () {
+            map.addLayer(lyr_ched);
+
+            map.removeLayer(lyr_ched_selecto)
+            map.removeLayer(lyr_supercito)
+            map.removeLayer(lyr_super_che)
+            map.removeLayer(lyr_super_ched)
+            map.removeLayer(lyr_super_ched_selecto)
+            map.removeLayer(lyr_tiendas)
+
+
+
+        });
+        $("#ched_select").click(function () {
+
+            map.addLayer(lyr_ched_selecto);
+            map.removeLayer(lyr_ched)
+            map.removeLayer(lyr_supercito)
+            map.removeLayer(lyr_super_che)
+            map.removeLayer(lyr_super_ched)
+            map.removeLayer(lyr_super_ched_selecto)
+            map.removeLayer(lyr_tiendas)
+
+
+        })
+
+
+
+        $("#supercito").click(function () {
+            map.addLayer(lyr_supercito);
+            map.removeLayer(lyr_ched)
+            map.removeLayer(lyr_ched_selecto)
+            map.removeLayer(lyr_super_che)
+            map.removeLayer(lyr_super_ched)
+            map.removeLayer(lyr_super_ched_selecto)
+            map.removeLayer(lyr_tiendas)
+
+
+
+
+        });
+        $("#super_che").click(function () {
+            map.addLayer(lyr_super_che);
+            map.removeLayer(lyr_ched)
+            map.removeLayer(lyr_ched_selecto)
+            map.removeLayer(lyr_supercito)
+            map.removeLayer(lyr_super_ched)
+            map.removeLayer(lyr_super_ched_selecto)
+            map.removeLayer(lyr_tiendas)
+
+
+
+
+        });
+        $("#super_ched").click(function () {
+            map.addLayer(lyr_super_ched);
+            map.removeLayer(lyr_ched)
+            map.removeLayer(lyr_ched_selecto)
+            map.removeLayer(lyr_supercito)
+            map.removeLayer(lyr_super_che)
+            map.removeLayer(lyr_super_ched_selecto)
+            map.removeLayer(lyr_tiendas)
+
+
+
+        });
+        $("#super_ched_select").click(function () {
+            map.addLayer(lyr_super_ched_selecto);
+            map.removeLayer(lyr_ched)
+            map.removeLayer(lyr_ched_selecto)
+            map.removeLayer(lyr_supercito)
+            map.removeLayer(lyr_super_che)
+            map.removeLayer(lyr_super_ched)
+            map.removeLayer(lyr_tiendas)
+
+
+
+
+        });
+        $("#total").click(function () {
+
+            map.addLayer(lyr_tiendas)
+
+        });
+        $("#clean").click(function () {
+            map.removeLayer(lyr_ched)
+            map.removeLayer(lyr_ched_selecto)
+            map.removeLayer(lyr_supercito)
+            map.removeLayer(lyr_super_che)
+            map.removeLayer(lyr_super_ched)
+            map.removeLayer(lyr_super_ched_selecto)
+            map.removeLayer(lyr_tiendas)
+
+        });
+
+        ////////////////////////////////////////////////////////
+
+
+
+
+
+
+
+
+
+        // LAYER GROUPS
+        var group_base_map = L.layerGroup([stadiaBaseMap,baseMapsatelital]);
+
+        var baseMaps = {
+            "<span class='fw-bold'>Google Satelite&copy</span>": baseMapsatelital,
+            "<span class='fw-bold'>Stadia Maps&copy</span>": stadiaBaseMap,
+        }
+        L.control.layers(baseMaps).addTo(map)
+
+
+        var credctrl = L.controlCredits({
+            image: "{% static 'images/png/geosig.png'%}",
+            link: "https://www.linkedin.com/in/geofrancisco/",
+            text: " "
+        }).addTo(map);
+
+        setBounds();
+
+        // FUNCION FILTRADO OJO 
+    </script>
+
+</body>
+
+</html>
